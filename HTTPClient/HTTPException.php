@@ -9,7 +9,12 @@ use Exception;
  */
 class HTTPException extends Exception
 {
-    public function __construct($message = "Unknown error", $code = 0)
+    /**
+     * Construct the exception.
+     * @param string $message
+     * @param int $code
+     */
+    public function __construct(string $message = "Unknown error", int $code = 0)
     {
         $error = error_get_last();
 
@@ -24,6 +29,10 @@ class HTTPException extends Exception
         parent::__construct($message, $code);
     }
 
+    /**
+     * String representation of the exception
+     * @return string
+     */
     public function __toString()
     {
         return __CLASS__ . ": $this->code $this->message\n";

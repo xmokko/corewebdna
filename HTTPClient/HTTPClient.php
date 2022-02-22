@@ -3,17 +3,7 @@
 namespace HTTPClient;
 
 use Exception;
-
-// TODO:
-//    Send HTTP requests to the given URL using different methods, such as GET, POST, etc.
-//    Send JSON payloads
-//    Send custom HTTP headers
-//    Retrieve HTTP response payloads
-//    Retrieve/parse HTTP response headers
-//    All JSON payloads must be passed in as associative arrays
-//    All JSON payloads must be returned as associative arrays
-//    Any JSON conversion errors must throw an exception
-//    Erroneous HTTP response codes (e.g. 4xx, 5xx) must throw an exception
+use JsonException;
 
 /**
  * Simple HTTP client
@@ -26,17 +16,24 @@ class HTTPClient
     private string $content = '';
     /** Http request headers */
     private array $headers;
-    private array $httpResponseHeader;
+    /** Http response headers */
+    private array $httpResponseHeaders;
+    /** Http method  */
     private string $method = 'GET';
+    /** Http url */
     private string $url;
 
-    public function __construct($url)
+    /**
+     * Construct the HTTPClient.
+     * @param string $url
+     */
+    public function __construct(string $url)
     {
         $this->setUrl($url);
     }
 
     /**
-     * Send Request
+     * Send Http Request
      * @throws HTTPException
      */
     public function send(): string
@@ -47,17 +44,26 @@ class HTTPClient
             throw new HTTPException();
         }
 
-        $this->setHttpResponseHeader($http_response_header);
+        $this->setHttpResponseHeaders($http_response_header);
 
         return $content;
     }
 
+    /**
+     * Get Http url
+     * @return string
+     */
     public function getUrl(): string
     {
         return $this->url;
     }
 
-    public function setUrl($url): HTTPClient
+    /**
+     * Set Http url
+     * @param string $url
+     * @return $this
+     */
+    public function setUrl(string $url): HTTPClient
     {
         $this->url = $url;
         return $this;
@@ -74,14 +80,14 @@ class HTTPClient
             $headers .= 'Authorization: Bearer ' . $this->getBearerToken() . "\r\n";
         }
 
-        $httpRequestOptions = array(
-            'http' => array(
+        $httpRequestOptions = [
+            'http' => [
                 'method' => $this->method,
                 'header' => $headers,
-            )
-        );
+            ]
+        ];
 
-        if (in_array($this->getMethod(), ['PUT', 'POST']) && $this->getContent() !== '') {
+        if (in_array($this->getMethod(), ['POST', 'PUT', 'PATCH']) && $this->getContent() !== '') {
             $httpRequestOptions['http']['header'] .= "Content-type: application/json\r\n";
             $httpRequestOptions['http']['content'] = $this->getContent();
         }
@@ -89,39 +95,64 @@ class HTTPClient
         return stream_context_create($httpRequestOptions);
     }
 
+    /**
+     * Get Request headers
+     * @return array
+     */
     public function getHeaders(): array
     {
         return $this->headers;
     }
 
-    public function setHeaders($headers): HTTPClient
+    /**
+     * Set Request headers
+     * @param string $headers
+     * @return $this
+     */
+    public function setHeaders(string $headers): HTTPClient
     {
         $this->headers[] = $headers;
         return $this;
     }
 
+    /**
+     * Get Bearer Authentication token
+     * @return string
+     */
     public function getBearerToken(): string
     {
         return $this->bearerToken;
     }
 
-    public function setBearerToken($bearerToken): HTTPClient
+    /**
+     * Set Bearer Authentication token
+     * @param string $bearerToken
+     * @return $this
+     */
+    public function setBearerToken(string $bearerToken): HTTPClient
     {
         $this->bearerToken = $bearerToken;
         return $this;
     }
 
+    /**
+     * Get Http method
+     * @return string
+     */
     public function getMethod(): string
     {
         return $this->method;
     }
 
     /**
+     * Set Http method
+     * @param string $method
+     * @return HTTPClient
      * @throws Exception
      */
-    public function setMethod($method): HTTPClient
+    public function setMethod(string $method): HTTPClient
     {
-        if (!in_array($method, ['GET', 'POST', 'PUT', 'OPTIONS'])) {
+        if (!in_array($method, ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'])) {
             throw new Exception("Can't set method!");
         }
 
@@ -129,24 +160,43 @@ class HTTPClient
         return $this;
     }
 
+    /**
+     * Get Http request header content
+     * @return string
+     */
     public function getContent(): string
     {
         return $this->content;
     }
 
-    public function setContent($content): HTTPClient
+    /**
+     * Set Http request header content
+     * @param array $content
+     * @return HTTPClient
+     * @throws JsonException
+     */
+    public function setContent(array $content): HTTPClient
     {
-        $this->content = $content;
+        $this->content = json_encode($content, JSON_THROW_ON_ERROR);
         return $this;
     }
 
-    public function getHttpResponseHeader(): array
+    /**
+     * Get Http Response headers
+     * @return array
+     */
+    public function getHttpResponseHeaders(): array
     {
-        return $this->httpResponseHeader;
+        return $this->httpResponseHeaders;
     }
 
-    protected function setHttpResponseHeader($httpResponseHeader)
+    /**
+     * Set Http Response headers
+     * @param array $httpResponseHeaders
+     * @return void
+     */
+    protected function setHttpResponseHeaders(array $httpResponseHeaders)
     {
-        $this->httpResponseHeader = $httpResponseHeader;
+        $this->httpResponseHeaders = $httpResponseHeaders;
     }
 }

@@ -1,18 +1,33 @@
 <?php
 
+namespace App;
+
 use HTTPClient\HTTPClient;
 use HTTPClient\HTTPException;
+use JsonException;
+use Exception;
 
+/**
+ * HTTP client application
+ */
 class App
 {
+    /** Simple HTTP client */
     private HTTPClient $client;
 
+    /**
+     * Construct the application.
+     */
     public function __construct()
     {
         $url = 'https://corednacom.corewebdna.com/assessment-endpoint.php';
         $this->client = new HTTPClient($url);
     }
 
+    /**
+     * Run application - send requests
+     * @return void
+     */
     public function run()
     {
         try {
@@ -31,17 +46,25 @@ class App
                 ->setHeaders("Accept-language: en")
                 ->send();
 
+            print $this->client->getHttpResponseHeaders()[0];
+
+        } catch (JsonException $e) {
+            print ("JSON: {$e->getCode()} {$e->getMessage()}");
         } catch (HTTPException|Exception $e) {
             print ("{$e->getCode()} {$e->getMessage()}");
         }
     }
 
-    protected function getUserData()
+    /**
+     * User data for send
+     * @return string[]
+     */
+    protected function getUserData(): array
     {
-        return json_encode([
-            'name' => 'John Doe',
-            'email' => 'spamwelcomedhere@gmail.com',
-            'url' => 'https://github.com/john-doe/httpClient-client'
-        ]);
+        return [
+            'name' => 'Stanislav Yeremenko',
+            'email' => 'stanislav.yeremenko@chisw.com',
+            'url' => 'https://github.com/xmokko/corewebdna'
+        ];
     }
 }
